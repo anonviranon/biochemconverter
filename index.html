@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>labbiochemhb - Precision Unit Converter</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&family=Inter:wght@400;600;900&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f172a;
+            background: linear-gradient(135deg, #166534 0%, #831843 100%);
+            color: #f1f5f9;
+            min-height: 100vh;
+        }
+        
+        .digital-display {
+            font-family: 'JetBrains+Mono', monospace;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Sharp Corners & Bold Shadows */
+        .sharp-card {
+            background: #1e293b;
+            border: 4px solid #ec4899; 
+            box-shadow: 15px 15px 0px 0px #16a34a; 
+        }
+
+        .history-card {
+            background: rgba(15, 23, 42, 0.9);
+            border: 4px solid #16a34a;
+            box-shadow: 10px 10px 0px 0px #ec4899;
+        }
+
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        select {
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%23ec4899'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 1rem;
+        }
+
+        .cat-btn {
+            border: 2px solid transparent;
+        }
+        
+        .cat-btn.active {
+            background-color: #ec4899 !important;
+            color: #ffffff !important;
+            border-color: #22c55e !important;
+        }
+
+        /* Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scroll::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: #16a34a;
+        }
+    </style>
+</head>
+<body class="flex flex-col items-center justify-center p-4 md:p-8">
+
+    <div class="w-full max-w-6xl flex flex-col md:flex-row gap-12 items-start justify-center">
+        
+        <!-- MAIN CONVERTER SECTION -->
+        <div class="w-full max-w-md shrink-0">
+            <div class="sharp-card rounded-none overflow-hidden">
+                <!-- RESULT DISPLAY (TOP) -->
+                <div class="bg-pink-600 p-8 border-b-4 border-green-500 text-center">
+                    <span class="text-xs font-black uppercase tracking-[0.2em] text-green-300 mb-2 block">Calculated Result</span>
+                    <div id="outputValue" class="digital-display text-4xl md:text-5xl font-bold text-white break-all">
+                        0.00
+                    </div>
+                    <div id="outputUnitLabel" class="text-pink-200 mt-2 font-bold uppercase text-xs">Select units to begin</div>
+                </div>
+
+                <!-- CONTROLS -->
+                <div class="p-6 space-y-6">
+                    <div>
+                        <label class="text-xs font-black text-pink-400 uppercase ml-1 mb-2 block tracking-widest">Category</label>
+                        <div class="grid grid-cols-4 gap-2" id="categoryGrid"></div>
+                    </div>
+
+                    <div class="space-y-4">
+                        <div class="relative">
+                            <label class="text-xs font-black text-green-400 uppercase ml-1 mb-2 block tracking-widest">Value</label>
+                            <input type="number" id="inputValue" value="1" 
+                                class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-4 text-xl font-bold focus:outline-none focus:border-pink-500 transition-all text-white"
+                                placeholder="0.00">
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase ml-1 block">From</label>
+                                <select id="fromUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-pink-400"></select>
+                            </div>
+                            <div class="space-y-2">
+                                <label class="text-xs font-black text-slate-400 uppercase ml-1 block">To</label>
+                                <select id="toUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-green-400"></select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2 pt-2">
+                        <!-- MERGED BUTTON -->
+                        <button onclick="copyAndSaveResult()" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-none transition-transform active:scale-95 uppercase text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
+                            Copy & Save Result
+                        </button>
+                        <button onclick="resetApp()" class="px-6 bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-none transition-transform active:scale-95 uppercase text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
+                            Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <p class="text-center mt-8 text-white text-xs font-black uppercase tracking-[0.3em] opacity-80">
+                labbiochemhb <span class="text-pink-500">Pink</span> & <span class="text-green-500">Green</span> Edition
+            </p>
+        </div>
+
+        <!-- HISTORY SECTION (RIGHT) -->
+        <div class="w-full max-w-md history-card rounded-none overflow-hidden h-fit md:max-h-[85vh] flex flex-col">
+            <div class="bg-green-600 p-4 border-b-4 border-pink-500 flex justify-between items-center">
+                <span class="text-sm font-black uppercase tracking-widest text-white">Records History</span>
+                <button onclick="clearHistory()" class="text-[10px] font-black bg-slate-900 px-2 py-1 text-pink-400 hover:text-pink-300 uppercase">Clear All</button>
+            </div>
+            <div id="historyList" class="p-4 space-y-3 overflow-y-auto custom-scroll flex-1 text-sm font-medium">
+                <!-- Records go here -->
+                <div class="text-slate-500 italic text-center py-8">No records yet.</div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        const unitData = {
+            volume: {
+                name: "Volume",
+                icon: "💧",
+                units: {
+                    liters: { factor: 1, label: "Liters (L)" },
+                    milliliters: { factor: 0.001, label: "Milliliters (mL)" },
+                    microliters: { factor: 1e-6, label: "Microliters (μL)" },
+                    nanoliters: { factor: 1e-9, label: "Nanoliters (nL)" },
+                    picoliters: { factor: 1e-12, label: "Picoliters (pL)" },
+                    femtoliters: { factor: 1e-15, label: "Femtoliters (fL)" },
+                    attoliters: { factor: 1e-18, label: "Attoliters (aL)" },
+                    zeptoliters: { factor: 1e-21, label: "Zeptoliters (zL)" },
+                    yoctoliters: { factor: 1e-24, label: "Yoctoliters (yL)" },
+                    cubic_meters: { factor: 1000, label: "Cubic Meters (m³)" },
+                    gallons: { factor: 3.78541, label: "US Gallons (gal)" },
+                    cups: { factor: 0.236588, label: "Cups" }
+                }
+            },
+            length: {
+                name: "Length",
+                icon: "📏",
+                units: {
+                    meters: { factor: 1, label: "Meters (m)" },
+                    kilometers: { factor: 1000, label: "Kilometers (km)" },
+                    centimeters: { factor: 0.01, label: "Centimeters (cm)" },
+                    millimeters: { factor: 0.001, label: "Millimeters (mm)" },
+                    micrometers: { factor: 1e-6, label: "Micrometers (μm)" },
+                    nanometers: { factor: 1e-9, label: "Nanometers (nm)" },
+                    picometers: { factor: 1e-12, label: "Picometers (pm)" },
+                    femtometers: { factor: 1e-15, label: "Femtometers (fm)" },
+                    attometers: { factor: 1e-18, label: "Attometers (am)" },
+                    zeptometers: { factor: 1e-21, label: "Zeptometers (zm)" },
+                    yoctometers: { factor: 1e-24, label: "Yoctometers (ym)" },
+                    miles: { factor: 1609.344, label: "Miles (mi)" },
+                    feet: { factor: 0.3048, label: "Feet (ft)" },
+                    inches: { factor: 0.0254, label: "Inches (in)" },
+                    lightyears: { factor: 9.461e+15, label: "Light Years (ly)" }
+                }
+            },
+            mass: {
+                name: "Mass",
+                icon: "⚖️",
+                units: {
+                    kilograms: { factor: 1, label: "Kilograms (kg)" },
+                    grams: { factor: 0.001, label: "Grams (g)" },
+                    milligrams: { factor: 1e-6, label: "Milligrams (mg)" },
+                    micrograms: { factor: 1e-9, label: "Micrograms (μg)" },
+                    nanograms: { factor: 1e-12, label: "Nanograms (ng)" },
+                    picograms: { factor: 1e-15, label: "Picograms (pg)" },
+                    femtograms: { factor: 1e-18, label: "Femtograms (fg)" },
+                    attograms: { factor: 1e-21, label: "Attograms (ag)" },
+                    zeptograms: { factor: 1e-24, label: "Zeptograms (zg)" },
+                    yoctograms: { factor: 1e-27, label: "Yoctograms (yg)" },
+                    tonnes: { factor: 1000, label: "Metric Tonnes (t)" },
+                    pounds: { factor: 0.45359237, label: "Pounds (lb)" },
+                    ounces: { factor: 0.0283495, label: "Ounces (oz)" },
+                    solar_mass: { factor: 1.989e+30, label: "Solar Mass (M☉)" }
+                }
+            },
+            pressure: {
+                name: "Pressure",
+                icon: "🌪️",
+                units: {
+                    pascal: { factor: 1, label: "Pascal (Pa)" },
+                    kilopascal: { factor: 1000, label: "Kilopascal (kPa)" },
+                    bar: { factor: 100000, label: "Bar" },
+                    atm: { factor: 101325, label: "Atmosphere (atm)" },
+                    psi: { factor: 6894.76, label: "PSI" },
+                    torr: { factor: 133.322, label: "Torr (mmHg)" }
+                }
+            },
+            temp: {
+                name: "Temp",
+                icon: "🌡️",
+                isTemperature: true,
+                units: {
+                    celsius: { label: "Celsius (°C)" },
+                    fahrenheit: { label: "Fahrenheit (°F)" },
+                    kelvin: { label: "Kelvin (K)" }
+                }
+            },
+            energy: {
+                name: "Energy",
+                icon: "⚡",
+                units: {
+                    joules: { factor: 1, label: "Joules (J)" },
+                    kilojoules: { factor: 1000, label: "Kilojoules (kJ)" },
+                    calories: { factor: 4.184, label: "Calories (cal)" },
+                    kilocalories: { factor: 4184, label: "Kilocalories (kcal)" },
+                    watt_hours: { factor: 3600, label: "Watt-hours (Wh)" },
+                    electronvolts: { factor: 1.60218e-19, label: "Electronvolts (eV)" }
+                }
+            },
+            force: {
+                name: "Force",
+                icon: "💥",
+                units: {
+                    newtons: { factor: 1, label: "Newtons (N)" },
+                    kilonewtons: { factor: 1000, label: "Kilonewtons (kN)" },
+                    dynes: { factor: 1e-5, label: "Dynes (dyn)" },
+                    pound_force: { factor: 4.44822, label: "Pound-force (lbf)" }
+                }
+            },
+            power: {
+                name: "Power",
+                icon: "🔌",
+                units: {
+                    watts: { factor: 1, label: "Watts (W)" },
+                    kilowatts: { factor: 1000, label: "Kilowatts (kW)" },
+                    horsepower: { factor: 745.7, label: "Horsepower (hp)" },
+                    btu_hr: { factor: 0.293071, label: "BTU/hr" }
+                }
+            }
+        };
+
+        let currentCategory = 'volume';
+        let history = [];
+        const STORAGE_KEY = 'sci_convert_state_v3';
+
+        const catGrid = document.getElementById('categoryGrid');
+        const fromUnitSelect = document.getElementById('fromUnit');
+        const toUnitSelect = document.getElementById('toUnit');
+        const inputField = document.getElementById('inputValue');
+        const outputDisplay = document.getElementById('outputValue');
+        const outputLabel = document.getElementById('outputUnitLabel');
+        const historyList = document.getElementById('historyList');
+
+        function saveState() {
+            const state = {
+                category: currentCategory,
+                fromUnit: fromUnitSelect.value,
+                toUnit: toUnitSelect.value,
+                inputValue: inputField.value,
+                history: history
+            };
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+        }
+
+        function loadState() {
+            try {
+                const saved = localStorage.getItem(STORAGE_KEY);
+                return saved ? JSON.parse(saved) : null;
+            } catch (e) { return null; }
+        }
+
+        function init() {
+            const savedState = loadState();
+            if (savedState) {
+                if (unitData[savedState.category]) currentCategory = savedState.category;
+                inputField.value = savedState.inputValue || 1;
+                history = savedState.history || [];
+            }
+
+            Object.keys(unitData).forEach(key => {
+                const btn = document.createElement('button');
+                btn.className = `cat-btn p-3 rounded-none flex flex-col items-center justify-center transition-all bg-slate-800 text-slate-400 ${key === currentCategory ? 'active' : ''}`;
+                btn.innerHTML = `<span class="text-lg mb-1">${unitData[key].icon}</span><span class="text-[8px] font-black uppercase tracking-tighter">${unitData[key].name}</span>`;
+                btn.onclick = () => switchCategory(key);
+                btn.id = `cat-${key}`;
+                catGrid.appendChild(btn);
+            });
+
+            updateUnitOptions(savedState?.fromUnit, savedState?.toUnit);
+            attachListeners();
+            calculate();
+            renderHistory();
+        }
+
+        function switchCategory(key) {
+            document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+            const active = document.getElementById(`cat-${key}`);
+            active.classList.add('active');
+
+            currentCategory = key;
+            updateUnitOptions();
+            calculate();
+            saveState();
+        }
+
+        function updateUnitOptions(preferredFrom, preferredTo) {
+            const units = unitData[currentCategory].units;
+            let options = '';
+            Object.keys(units).forEach(u => {
+                options += `<option value="${u}">${units[u].label}</option>`;
+            });
+            fromUnitSelect.innerHTML = options;
+            toUnitSelect.innerHTML = options;
+            
+            if (preferredFrom && units[preferredFrom]) fromUnitSelect.value = preferredFrom;
+            if (preferredTo && units[preferredTo]) toUnitSelect.value = preferredTo;
+            else if (!preferredTo && Object.keys(units).length > 1) toUnitSelect.selectedIndex = 1;
+        }
+
+        function calculate() {
+            const val = parseFloat(inputField.value);
+            if (isNaN(val)) {
+                outputDisplay.innerText = "---";
+                return;
+            }
+
+            const fromKey = fromUnitSelect.value;
+            const toKey = toUnitSelect.value;
+            const cat = unitData[currentCategory];
+            let result;
+
+            if (cat.isTemperature) {
+                result = convertTemperature(val, fromKey, toKey);
+            } else {
+                const inBase = val * cat.units[fromKey].factor;
+                result = inBase / cat.units[toKey].factor;
+            }
+
+            let formatted;
+            if (Math.abs(result) !== 0 && (Math.abs(result) < 0.0001 || Math.abs(result) > 10000000)) {
+                formatted = result.toExponential(6);
+            } else {
+                formatted = Number(result.toFixed(10)).toString(); 
+            }
+
+            outputDisplay.innerText = formatted;
+            outputLabel.innerText = cat.units[toKey].label;
+            saveState();
+        }
+
+        // Combined Function: Copy to Clipboard AND Save to History
+        function copyAndSaveResult() {
+            const resultText = outputDisplay.innerText;
+            if (resultText === "---") return;
+
+            // 1. Copy to Clipboard
+            const el = document.createElement('textarea');
+            el.value = resultText;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+
+            // 2. Save to History
+            const val = inputField.value;
+            const fromLabel = unitData[currentCategory].units[fromUnitSelect.value].label;
+            const toLabel = unitData[currentCategory].units[toUnitSelect.value].label;
+            const timestamp = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+            const record = {
+                val, fromLabel, result: resultText, toLabel, timestamp, 
+                catIcon: unitData[currentCategory].icon,
+                catName: unitData[currentCategory].name
+            };
+
+            history.unshift(record);
+            if (history.length > 50) history.pop();
+            
+            renderHistory();
+            saveState();
+
+            // 3. UI Feedback
+            const btn = event.currentTarget;
+            const originalText = btn.innerText;
+            btn.innerText = "COPIED & SAVED!";
+            btn.style.backgroundColor = "#ec4899"; // Switch to Pink for feedback
+            
+            const historyCard = document.querySelector('.history-card');
+            historyCard.classList.add('scale-[1.02]');
+
+            setTimeout(() => {
+                btn.innerText = originalText;
+                btn.style.backgroundColor = ""; // Reset to Green
+                historyCard.classList.remove('scale-[1.02]');
+            }, 1000);
+        }
+
+        function renderHistory() {
+            if (history.length === 0) {
+                historyList.innerHTML = `<div class="text-slate-500 italic text-center py-8">No records yet.</div>`;
+                return;
+            }
+
+            historyList.innerHTML = history.map((item, index) => `
+                <div class="bg-slate-800/80 border-l-4 border-pink-500 p-3 relative group">
+                    <div class="flex justify-between items-start mb-1">
+                        <span class="text-[10px] font-black uppercase text-green-400 opacity-80">${item.catIcon} ${item.catName}</span>
+                        <span class="text-[9px] text-slate-500 font-bold">${item.timestamp}</span>
+                    </div>
+                    <div class="text-xs text-slate-300">
+                        <span class="font-bold text-white">${item.val}</span> <span class="text-[10px] opacity-70">${item.fromLabel}</span>
+                    </div>
+                    <div class="text-lg font-black text-pink-400 break-all leading-tight">
+                        ${item.result}
+                    </div>
+                    <div class="text-[10px] text-green-500 font-bold uppercase tracking-wider">
+                        ${item.toLabel}
+                    </div>
+                    <button onclick="deleteHistoryItem(${index})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-400 transition-opacity">
+                        <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function deleteHistoryItem(index) {
+            history.splice(index, 1);
+            renderHistory();
+            saveState();
+        }
+
+        function clearHistory() {
+            if (confirm("Clear all recorded conversion results?")) {
+                history = [];
+                renderHistory();
+                saveState();
+            }
+        }
+
+        function convertTemperature(val, from, to) {
+            if (from === to) return val;
+            let celsius;
+            if (from === 'celsius') celsius = val;
+            else if (from === 'fahrenheit') celsius = (val - 32) * 5/9;
+            else if (from === 'kelvin') celsius = val - 273.15;
+
+            if (to === 'celsius') return celsius;
+            if (to === 'fahrenheit') return (celsius * 9/5) + 32;
+            if (to === 'kelvin') return celsius + 273.15;
+        }
+
+        function attachListeners() {
+            inputField.oninput = calculate;
+            fromUnitSelect.onchange = calculate;
+            toUnitSelect.onchange = calculate;
+        }
+
+        function resetApp() {
+            inputField.value = 1;
+            calculate();
+        }
+
+        init();
+    </script>
+</body>
+</html>
