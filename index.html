@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>labbiochemhb - Precision Unit Converter</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -14,24 +14,42 @@
             background: linear-gradient(135deg, #166534 0%, #831843 100%);
             color: #f1f5f9;
             min-height: 100vh;
+            /* Prevent bounce on mobile */
+            overscroll-behavior-y: none;
         }
         
         .digital-display {
             font-family: 'JetBrains+Mono', monospace;
             text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.5);
+            /* Fluid font size for long scientific strings */
+            font-size: clamp(1.5rem, 8vw, 3rem);
+            line-height: 1.2;
         }
 
         /* Sharp Corners & Bold Shadows */
         .sharp-card {
             background: #1e293b;
             border: 4px solid #ec4899; 
-            box-shadow: 15px 15px 0px 0px #16a34a; 
+            /* Slightly smaller shadow on mobile to prevent overflow */
+            box-shadow: 8px 8px 0px 0px #16a34a; 
+        }
+
+        @media (min-width: 768px) {
+            .sharp-card {
+                box-shadow: 15px 15px 0px 0px #16a34a;
+            }
         }
 
         .history-card {
             background: rgba(15, 23, 42, 0.9);
             border: 4px solid #16a34a;
-            box-shadow: 10px 10px 0px 0px #ec4899;
+            box-shadow: 8px 8px 0px 0px #ec4899;
+        }
+
+        @media (min-width: 768px) {
+            .history-card {
+                box-shadow: 10px 10px 0px 0px #ec4899;
+            }
         }
 
         input[type="number"]::-webkit-inner-spin-button,
@@ -50,6 +68,7 @@
 
         .cat-btn {
             border: 2px solid transparent;
+            -webkit-tap-highlight-color: transparent;
         }
         
         .cat-btn.active {
@@ -68,74 +87,81 @@
         .custom-scroll::-webkit-scrollbar-thumb {
             background: #16a34a;
         }
+
+        /* Mobile specific spacing */
+        @media (max-width: 640px) {
+            .container-padding {
+                padding-right: 1.5rem; /* Account for the sharp shadow */
+            }
+        }
     </style>
 </head>
-<body class="flex flex-col items-center justify-center p-4 md:p-8">
+<body class="flex flex-col items-center justify-start md:justify-center p-4 md:p-8 container-padding">
 
-    <div class="w-full max-w-6xl flex flex-col md:flex-row gap-12 items-start justify-center">
+    <div class="w-full max-w-6xl flex flex-col md:flex-row gap-8 md:gap-12 items-start justify-center">
         
         <!-- MAIN CONVERTER SECTION -->
         <div class="w-full max-w-md shrink-0">
             <div class="sharp-card rounded-none overflow-hidden">
                 <!-- RESULT DISPLAY (TOP) -->
-                <div class="bg-pink-600 p-8 border-b-4 border-green-500 text-center">
-                    <span class="text-xs font-black uppercase tracking-[0.2em] text-green-300 mb-2 block">Calculated Result</span>
-                    <div id="outputValue" class="digital-display text-4xl md:text-5xl font-bold text-white break-all">
+                <div class="bg-pink-600 p-6 md:p-8 border-b-4 border-green-500 text-center">
+                    <span class="text-[10px] font-black uppercase tracking-[0.2em] text-green-300 mb-1 block">Calculated Result</span>
+                    <div id="outputValue" class="digital-display font-bold text-white break-all">
                         0.00
                     </div>
-                    <div id="outputUnitLabel" class="text-pink-200 mt-2 font-bold uppercase text-xs">Select units to begin</div>
+                    <div id="outputUnitLabel" class="text-pink-200 mt-2 font-bold uppercase text-[10px]">Select units to begin</div>
                 </div>
 
                 <!-- CONTROLS -->
-                <div class="p-6 space-y-6">
+                <div class="p-5 md:p-6 space-y-6">
                     <div>
-                        <label class="text-xs font-black text-pink-400 uppercase ml-1 mb-2 block tracking-widest">Category</label>
+                        <label class="text-[10px] font-black text-pink-400 uppercase ml-1 mb-2 block tracking-widest">Category</label>
                         <div class="grid grid-cols-4 gap-2" id="categoryGrid"></div>
                     </div>
 
                     <div class="space-y-4">
                         <div class="relative">
-                            <label class="text-xs font-black text-green-400 uppercase ml-1 mb-2 block tracking-widest">Value</label>
+                            <label class="text-[10px] font-black text-green-400 uppercase ml-1 mb-2 block tracking-widest">Value</label>
                             <input type="number" id="inputValue" value="1" 
                                 class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-4 text-xl font-bold focus:outline-none focus:border-pink-500 transition-all text-white"
                                 placeholder="0.00">
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-400 uppercase ml-1 block">From</label>
-                                <select id="fromUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-pink-400"></select>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 block">From</label>
+                                <select id="fromUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-3 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-pink-400"></select>
                             </div>
-                            <div class="space-y-2">
-                                <label class="text-xs font-black text-slate-400 uppercase ml-1 block">To</label>
-                                <select id="toUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-4 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-green-400"></select>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-black text-slate-400 uppercase ml-1 block">To</label>
+                                <select id="toUnit" class="w-full bg-slate-900 border-2 border-slate-700 rounded-none px-3 py-3 text-sm font-bold focus:outline-none focus:border-green-500 cursor-pointer text-green-400"></select>
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex gap-2 pt-2">
+                    <div class="flex flex-col gap-3 pt-2">
                         <!-- MERGED BUTTON -->
-                        <button onclick="copyAndSaveResult()" class="flex-1 bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-none transition-transform active:scale-95 uppercase text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
+                        <button onclick="copyAndSaveResult()" class="w-full bg-green-600 hover:bg-green-500 text-white font-black py-4 rounded-none transition-transform active:scale-95 uppercase text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
                             Copy & Save Result
                         </button>
-                        <button onclick="resetApp()" class="px-6 bg-slate-700 hover:bg-slate-600 text-white font-black py-4 rounded-none transition-transform active:scale-95 uppercase text-sm shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
+                        <button onclick="resetApp()" class="w-full bg-slate-700 hover:bg-slate-600 text-white font-black py-3 rounded-none transition-transform active:scale-95 uppercase text-xs shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]">
                             Reset
                         </button>
                     </div>
                 </div>
             </div>
-            <p class="text-center mt-8 text-white text-xs font-black uppercase tracking-[0.3em] opacity-80">
-                labbiochemhb <span class="text-pink-500">Pink</span> & <span class="text-green-500">Green</span> Edition
+            <p class="text-center mt-6 md:mt-8 text-white text-[10px] font-black uppercase tracking-[0.3em] opacity-80">
+                labbiochemhb <span class="text-pink-500">Pink</span> & <span class="text-green-500">Green</span>
             </p>
         </div>
 
-        <!-- HISTORY SECTION (RIGHT) -->
-        <div class="w-full max-w-md history-card rounded-none overflow-hidden h-fit md:max-h-[85vh] flex flex-col">
-            <div class="bg-green-600 p-4 border-b-4 border-pink-500 flex justify-between items-center">
-                <span class="text-sm font-black uppercase tracking-widest text-white">Records History</span>
-                <button onclick="clearHistory()" class="text-[10px] font-black bg-slate-900 px-2 py-1 text-pink-400 hover:text-pink-300 uppercase">Clear All</button>
+        <!-- HISTORY SECTION (RIGHT/BOTTOM) -->
+        <div class="w-full max-w-md history-card rounded-none overflow-hidden h-fit md:max-h-[85vh] flex flex-col mb-8 md:mb-0">
+            <div class="bg-green-600 p-4 border-b-4 border-pink-500 flex justify-between items-center shrink-0">
+                <span class="text-xs font-black uppercase tracking-widest text-white">Records History</span>
+                <button onclick="clearHistory()" class="text-[9px] font-black bg-slate-900 px-2 py-1 text-pink-400 hover:text-pink-300 uppercase">Clear All</button>
             </div>
-            <div id="historyList" class="p-4 space-y-3 overflow-y-auto custom-scroll flex-1 text-sm font-medium">
+            <div id="historyList" class="p-4 space-y-3 overflow-y-auto custom-scroll flex-1 text-sm font-medium max-h-[400px] md:max-h-none">
                 <!-- Records go here -->
                 <div class="text-slate-500 italic text-center py-8">No records yet.</div>
             </div>
@@ -149,11 +175,11 @@
                 name: "Volume",
                 icon: "💧",
                 units: {
+                    picoliters: { factor: 1e-12, label: "Picoliters (pL)" },
+                    nanoliters: { factor: 1e-9, label: "Nanoliters (nL)" },
                     liters: { factor: 1, label: "Liters (L)" },
                     milliliters: { factor: 0.001, label: "Milliliters (mL)" },
                     microliters: { factor: 1e-6, label: "Microliters (μL)" },
-                    nanoliters: { factor: 1e-9, label: "Nanoliters (nL)" },
-                    picoliters: { factor: 1e-12, label: "Picoliters (pL)" },
                     femtoliters: { factor: 1e-15, label: "Femtoliters (fL)" },
                     attoliters: { factor: 1e-18, label: "Attoliters (aL)" },
                     zeptoliters: { factor: 1e-21, label: "Zeptoliters (zL)" },
@@ -167,13 +193,13 @@
                 name: "Length",
                 icon: "📏",
                 units: {
+                    picometers: { factor: 1e-12, label: "Picometers (pm)" },
+                    nanometers: { factor: 1e-9, label: "Nanometers (nm)" },
                     meters: { factor: 1, label: "Meters (m)" },
                     kilometers: { factor: 1000, label: "Kilometers (km)" },
                     centimeters: { factor: 0.01, label: "Centimeters (cm)" },
                     millimeters: { factor: 0.001, label: "Millimeters (mm)" },
                     micrometers: { factor: 1e-6, label: "Micrometers (μm)" },
-                    nanometers: { factor: 1e-9, label: "Nanometers (nm)" },
-                    picometers: { factor: 1e-12, label: "Picometers (pm)" },
                     femtometers: { factor: 1e-15, label: "Femtometers (fm)" },
                     attometers: { factor: 1e-18, label: "Attometers (am)" },
                     zeptometers: { factor: 1e-21, label: "Zeptometers (zm)" },
@@ -296,12 +322,14 @@
                 if (unitData[savedState.category]) currentCategory = savedState.category;
                 inputField.value = savedState.inputValue || 1;
                 history = savedState.history || [];
+            } else {
+                currentCategory = 'volume';
             }
 
             Object.keys(unitData).forEach(key => {
                 const btn = document.createElement('button');
-                btn.className = `cat-btn p-3 rounded-none flex flex-col items-center justify-center transition-all bg-slate-800 text-slate-400 ${key === currentCategory ? 'active' : ''}`;
-                btn.innerHTML = `<span class="text-lg mb-1">${unitData[key].icon}</span><span class="text-[8px] font-black uppercase tracking-tighter">${unitData[key].name}</span>`;
+                btn.className = `cat-btn p-2 rounded-none flex flex-col items-center justify-center transition-all bg-slate-800 text-slate-400 ${key === currentCategory ? 'active' : ''}`;
+                btn.innerHTML = `<span class="text-base mb-1">${unitData[key].icon}</span><span class="text-[7px] font-black uppercase tracking-tighter leading-none">${unitData[key].name}</span>`;
                 btn.onclick = () => switchCategory(key);
                 btn.id = `cat-${key}`;
                 catGrid.appendChild(btn);
@@ -333,9 +361,20 @@
             fromUnitSelect.innerHTML = options;
             toUnitSelect.innerHTML = options;
             
-            if (preferredFrom && units[preferredFrom]) fromUnitSelect.value = preferredFrom;
-            if (preferredTo && units[preferredTo]) toUnitSelect.value = preferredTo;
-            else if (!preferredTo && Object.keys(units).length > 1) toUnitSelect.selectedIndex = 1;
+            if (preferredFrom && units[preferredFrom]) {
+                fromUnitSelect.value = preferredFrom;
+            } else {
+                if (currentCategory === 'volume') fromUnitSelect.value = 'picoliters';
+                else if (currentCategory === 'length') fromUnitSelect.value = 'picometers';
+            }
+
+            if (preferredTo && units[preferredTo]) {
+                toUnitSelect.value = preferredTo;
+            } else {
+                if (currentCategory === 'volume') toUnitSelect.value = 'nanoliters';
+                else if (currentCategory === 'length') toUnitSelect.value = 'nanometers';
+                else if (Object.keys(units).length > 1) toUnitSelect.selectedIndex = 1;
+            }
         }
 
         function calculate() {
@@ -353,8 +392,8 @@
             if (cat.isTemperature) {
                 result = convertTemperature(val, fromKey, toKey);
             } else {
-                const inBase = val * cat.units[fromKey].factor;
-                result = inBase / cat.units[toKey].factor;
+                const inBase = val * (cat.units[fromKey]?.factor || 1);
+                result = inBase / (cat.units[toKey]?.factor || 1);
             }
 
             let formatted;
@@ -365,16 +404,14 @@
             }
 
             outputDisplay.innerText = formatted;
-            outputLabel.innerText = cat.units[toKey].label;
+            outputLabel.innerText = cat.units[toKey]?.label || "";
             saveState();
         }
 
-        // Combined Function: Copy to Clipboard AND Save to History
         function copyAndSaveResult() {
             const resultText = outputDisplay.innerText;
             if (resultText === "---") return;
 
-            // 1. Copy to Clipboard
             const el = document.createElement('textarea');
             el.value = resultText;
             document.body.appendChild(el);
@@ -382,7 +419,6 @@
             document.execCommand('copy');
             document.body.removeChild(el);
 
-            // 2. Save to History
             const val = inputField.value;
             const fromLabel = unitData[currentCategory].units[fromUnitSelect.value].label;
             const toLabel = unitData[currentCategory].units[toUnitSelect.value].label;
@@ -400,19 +436,18 @@
             renderHistory();
             saveState();
 
-            // 3. UI Feedback
             const btn = event.currentTarget;
             const originalText = btn.innerText;
             btn.innerText = "COPIED & SAVED!";
-            btn.style.backgroundColor = "#ec4899"; // Switch to Pink for feedback
+            btn.style.backgroundColor = "#ec4899"; 
             
             const historyCard = document.querySelector('.history-card');
-            historyCard.classList.add('scale-[1.02]');
+            historyCard.classList.add('scale-[1.01]');
 
             setTimeout(() => {
                 btn.innerText = originalText;
-                btn.style.backgroundColor = ""; // Reset to Green
-                historyCard.classList.remove('scale-[1.02]');
+                btn.style.backgroundColor = ""; 
+                historyCard.classList.remove('scale-[1.01]');
             }, 1000);
         }
 
@@ -425,19 +460,19 @@
             historyList.innerHTML = history.map((item, index) => `
                 <div class="bg-slate-800/80 border-l-4 border-pink-500 p-3 relative group">
                     <div class="flex justify-between items-start mb-1">
-                        <span class="text-[10px] font-black uppercase text-green-400 opacity-80">${item.catIcon} ${item.catName}</span>
-                        <span class="text-[9px] text-slate-500 font-bold">${item.timestamp}</span>
+                        <span class="text-[9px] font-black uppercase text-green-400 opacity-80">${item.catIcon} ${item.catName}</span>
+                        <span class="text-[8px] text-slate-500 font-bold">${item.timestamp}</span>
                     </div>
-                    <div class="text-xs text-slate-300">
-                        <span class="font-bold text-white">${item.val}</span> <span class="text-[10px] opacity-70">${item.fromLabel}</span>
+                    <div class="text-[11px] text-slate-300">
+                        <span class="font-bold text-white">${item.val}</span> <span class="text-[9px] opacity-70">${item.fromLabel}</span>
                     </div>
-                    <div class="text-lg font-black text-pink-400 break-all leading-tight">
+                    <div class="text-base font-black text-pink-400 break-all leading-tight">
                         ${item.result}
                     </div>
-                    <div class="text-[10px] text-green-500 font-bold uppercase tracking-wider">
+                    <div class="text-[9px] text-green-500 font-bold uppercase tracking-wider">
                         ${item.toLabel}
                     </div>
-                    <button onclick="deleteHistoryItem(${index})" class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-400 transition-opacity">
+                    <button onclick="deleteHistoryItem(${index})" class="absolute top-2 right-2 opacity-100 md:opacity-0 group-hover:opacity-100 text-rose-500 hover:text-rose-400 transition-opacity p-1">
                         <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>
                     </button>
                 </div>
