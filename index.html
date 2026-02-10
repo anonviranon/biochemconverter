@@ -151,7 +151,7 @@
                 </div>
             </div>
             <p class="text-center mt-6 md:mt-8 text-white text-[10px] font-black uppercase tracking-[0.3em] opacity-80">
-                labbiochemhb <span class="text-pink-500">
+                labbiochemhb <span class="text-pink-500">Pink</span> & <span class="text-green-500">Green</span>
             </p>
         </div>
 
@@ -171,6 +171,26 @@
 
     <script>
         const unitData = {
+            mass: {
+                name: "Mass",
+                icon: "⚖️",
+                units: {
+                    picograms: { factor: 1e-15, label: "Picograms (pg)" },
+                    nanograms: { factor: 1e-12, label: "Nanograms (ng)" },
+                    kilograms: { factor: 1, label: "Kilograms (kg)" },
+                    grams: { factor: 0.001, label: "Grams (g)" },
+                    milligrams: { factor: 1e-6, label: "Milligrams (mg)" },
+                    micrograms: { factor: 1e-9, label: "Micrograms (μg)" },
+                    femtograms: { factor: 1e-18, label: "Femtograms (fg)" },
+                    attograms: { factor: 1e-21, label: "Attograms (ag)" },
+                    zeptograms: { factor: 1e-24, label: "Zeptograms (zg)" },
+                    yoctograms: { factor: 1e-27, label: "Yoctograms (yg)" },
+                    tonnes: { factor: 1000, label: "Metric Tonnes (t)" },
+                    pounds: { factor: 0.45359237, label: "Pounds (lb)" },
+                    ounces: { factor: 0.0283495, label: "Ounces (oz)" },
+                    solar_mass: { factor: 1.989e+30, label: "Solar Mass (M☉)" }
+                }
+            },
             volume: {
                 name: "Volume",
                 icon: "💧",
@@ -208,26 +228,6 @@
                     feet: { factor: 0.3048, label: "Feet (ft)" },
                     inches: { factor: 0.0254, label: "Inches (in)" },
                     lightyears: { factor: 9.461e+15, label: "Light Years (ly)" }
-                }
-            },
-            mass: {
-                name: "Mass",
-                icon: "⚖️",
-                units: {
-                    kilograms: { factor: 1, label: "Kilograms (kg)" },
-                    grams: { factor: 0.001, label: "Grams (g)" },
-                    milligrams: { factor: 1e-6, label: "Milligrams (mg)" },
-                    micrograms: { factor: 1e-9, label: "Micrograms (μg)" },
-                    nanograms: { factor: 1e-12, label: "Nanograms (ng)" },
-                    picograms: { factor: 1e-15, label: "Picograms (pg)" },
-                    femtograms: { factor: 1e-18, label: "Femtograms (fg)" },
-                    attograms: { factor: 1e-21, label: "Attograms (ag)" },
-                    zeptograms: { factor: 1e-24, label: "Zeptograms (zg)" },
-                    yoctograms: { factor: 1e-27, label: "Yoctograms (yg)" },
-                    tonnes: { factor: 1000, label: "Metric Tonnes (t)" },
-                    pounds: { factor: 0.45359237, label: "Pounds (lb)" },
-                    ounces: { factor: 0.0283495, label: "Ounces (oz)" },
-                    solar_mass: { factor: 1.989e+30, label: "Solar Mass (M☉)" }
                 }
             },
             pressure: {
@@ -286,7 +286,7 @@
             }
         };
 
-        let currentCategory = 'volume';
+        let currentCategory = 'mass';
         let history = [];
         const STORAGE_KEY = 'sci_convert_state_v3';
 
@@ -323,7 +323,7 @@
                 inputField.value = savedState.inputValue || 1;
                 history = savedState.history || [];
             } else {
-                currentCategory = 'volume';
+                currentCategory = 'mass';
             }
 
             Object.keys(unitData).forEach(key => {
@@ -364,14 +364,16 @@
             if (preferredFrom && units[preferredFrom]) {
                 fromUnitSelect.value = preferredFrom;
             } else {
-                if (currentCategory === 'volume') fromUnitSelect.value = 'picoliters';
+                if (currentCategory === 'mass') fromUnitSelect.value = 'picograms';
+                else if (currentCategory === 'volume') fromUnitSelect.value = 'picoliters';
                 else if (currentCategory === 'length') fromUnitSelect.value = 'picometers';
             }
 
             if (preferredTo && units[preferredTo]) {
                 toUnitSelect.value = preferredTo;
             } else {
-                if (currentCategory === 'volume') toUnitSelect.value = 'nanoliters';
+                if (currentCategory === 'mass') toUnitSelect.value = 'nanograms';
+                else if (currentCategory === 'volume') toUnitSelect.value = 'nanoliters';
                 else if (currentCategory === 'length') toUnitSelect.value = 'nanometers';
                 else if (Object.keys(units).length > 1) toUnitSelect.selectedIndex = 1;
             }
@@ -396,12 +398,8 @@
                 result = inBase / (cat.units[toKey]?.factor || 1);
             }
 
-            let formatted;
-            if (Math.abs(result) !== 0 && (Math.abs(result) < 0.0001 || Math.abs(result) > 10000000)) {
-                formatted = result.toExponential(6);
-            } else {
-                formatted = Number(result.toFixed(10)).toString(); 
-            }
+            // Standardized to 2 decimal points as requested
+            let formatted = result.toFixed(2);
 
             outputDisplay.innerText = formatted;
             outputLabel.innerText = cat.units[toKey]?.label || "";
